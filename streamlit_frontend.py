@@ -3,7 +3,7 @@ import uuid
 import streamlit as st
 from langchain_core.messages import HumanMessage
 
-from langgraph_backend import workflow
+from langgraph_backend2 import workflow, retrive_all_threads
 
 # =====================================================
 # Utility Functions
@@ -37,7 +37,7 @@ def reset_chat():
 # =====================================================
 
 if "chat_threads" not in st.session_state:
-    st.session_state["chat_threads"] = []
+    st.session_state["chat_threads"] = retrive_all_threads()
 
 if "message_history" not in st.session_state:
     st.session_state["message_history"] = []
@@ -54,6 +54,8 @@ add_thread(st.session_state["thread_id"])
 # =====================================================
 
 st.sidebar.title("LangGraph Chatbot")
+
+uploaded_file= st.sidebar.file_uploader("Upload a PDF", type=["pdf"])
 
 if st.sidebar.button("➕ New Chat"):
     reset_chat()
@@ -151,3 +153,4 @@ if user_input:
         }
 
     )
+
