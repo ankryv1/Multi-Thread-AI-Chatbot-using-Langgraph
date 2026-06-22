@@ -13,6 +13,9 @@ from langchain_core.tools import tool
 
 # Now imports for RAG Tool
 
+#  Pahle thread_id ko null krdo
+current_thread_id = None
+
 from langchain_community.document_loaders import PyPDFLoader
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -80,13 +83,14 @@ def get_stock_price(symbol: str) -> dict:
 
 @tool
 def rag_tool(query: str):
-    """Search the asked query for information form uploaded documents"""
+    """Retrieve relevant context from the uploaded PDF"""
+    print("RAG TOOL CALLED")
+    vector_store = Chroma(collection_name=f"lang-{current_thread_id}", persist_directory='lang-chatDB', embedding_function=HuggingFaceEmbeddings())
     docs = vector_store.similarity_search(query, k=3)
-    return "\n\n".join(doc.page_content for doc in docs)
+    context = "\n\n".join(doc.page_content for doc in docs)
+    return context
 
-
-
-
+ 
 tools = [get_stock_price, search_tool, calculator, rag_tool]
 llm_with_tools = llm.bind_tools(tools)
 
@@ -117,11 +121,11 @@ def retrive_all_threads():
 #  hum isme set bhi use kr skte hai kuki yaha saame multiple threads aayenge so set , un multiple me se single id hi aayengi
 
 #  function for pdf uploadation
-def upload_create_vector(pdf_path):
+def upload_create_vector(pdf_path, thread_id):
     loader= PyPDFLoader(pdf_path)
-    docs = loader.load("")
+    docs = loader.load()
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size = 200, chunk_overlap = 20)
+    splitter = RecursiveCharacterTextSplitter(chunk_size = 1000, chunk_overlap = 200)
     chunks = splitter.split_documents(docs)
 
     embeddings = HuggingFaceEmbeddings()

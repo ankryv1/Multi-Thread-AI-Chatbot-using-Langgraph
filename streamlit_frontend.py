@@ -1,9 +1,9 @@
 import uuid
 
 import streamlit as st
-from langchain_core.messages import HumanMessage
-
-from langgraph_backend2 import workflow, retrive_all_threads
+from langchain_core.messages import HumanMessage,ToolMessage
+import langgraph_backend2
+from langgraph_backend2 import workflow, retrive_all_threads, upload_create_vector
 
 # =====================================================
 # Utility Functions
@@ -81,11 +81,21 @@ for thread_id in st.session_state["chat_threads"]:
 # =====================================================
 # Display Existing Messages
 # =====================================================
+if uploaded_file:
+        with open("temp.pdf", "wb") as f:               #  with open automatically closes the file when the work is done
+            f.write(uploaded_file.getbuffer())          #   getbuffer() returns raw binary data , means take bytes from memory and write them into temp.pdf(to disk)
+
+        upload_create_vector("temp.pdf", st.session_state["thread_id"])
 
 for msg in st.session_state["message_history"]:
 
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
+
+
+
+ # For pdf part
+   
 
 
 # =====================================================
@@ -122,6 +132,7 @@ if user_input:
     # Generator for streaming AI response
     def generate_response():
 
+        langgraph_backend2.current_thread_id=st.session_state["thread_id"]
         for message, metadata in workflow.stream(
 
             {
@@ -135,6 +146,11 @@ if user_input:
             stream_mode="messages",
 
         ):
+            print(type(message))
+            print(message)
+            print("-------------")
+            if isinstance(message, ToolMessage):
+                continue
 
             if message.content:
                 yield message.content
@@ -154,3 +170,4 @@ if user_input:
 
     )
 
+   
